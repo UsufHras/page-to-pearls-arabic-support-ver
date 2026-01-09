@@ -107,8 +107,8 @@ export async function generateVocabularyPdf(vocabulary: VocabularyWord[]): Promi
   yPos = margin;
 
   vocabulary.forEach((word, index) => {
-    // Estimate card height (add extra for Arabic translation)
-    const cardHeight = 95 + (word.examples.length * 12) + (word.arabicTranslation ? 8 : 0);
+    // Estimate card height (add extra for Arabic translation and pronunciation)
+    const cardHeight = 95 + (word.examples.length * 12) + (word.arabicTranslation ? 8 : 0) + (word.pronunciation ? 6 : 0);
     checkPageBreak(cardHeight);
 
     // Card background
@@ -130,6 +130,15 @@ export async function generateVocabularyPdf(vocabulary: VocabularyWord[]): Promi
     doc.setTextColor(...primaryColor);
     const wordTitle = word.word.charAt(0).toUpperCase() + word.word.slice(1);
     doc.text(wordTitle, margin + 20, yPos + 12);
+
+    // Pronunciation (IPA)
+    if (word.pronunciation) {
+      const wordWidth = doc.getTextWidth(wordTitle);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(...mutedColor);
+      doc.text(word.pronunciation, margin + 22 + wordWidth, yPos + 12);
+    }
 
     // Arabic translation
     if (word.arabicTranslation && hasArabicFont) {
