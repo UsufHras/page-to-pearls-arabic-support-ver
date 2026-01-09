@@ -34,12 +34,11 @@ serve(async (req) => {
     const systemPrompt = `You are a vocabulary extraction expert. Analyze the image of a book page and identify ALL highlighted or marked words. For each highlighted word, provide:
 
 1. The word exactly as it appears
-2. The phonetic pronunciation in IPA (International Phonetic Alphabet) format
-3. A clear, concise definition
-4. The Arabic translation of the word
-5. Two example sentences showing the word in context (label as "Example 1:" and "Example 2:")
-6. 2-3 synonyms
-7. 2-3 antonyms (if applicable, otherwise say "N/A")
+2. A clear, concise definition
+3. The Arabic translation of the word
+4. Two example sentences showing the word in context (label as "Example 1:" and "Example 2:")
+5. 2-3 synonyms
+6. 2-3 antonyms (if applicable, otherwise say "N/A")
 
 IMPORTANT: Return ONLY a valid JSON array. Do not include any text before or after the JSON.
 
@@ -47,7 +46,6 @@ Format your response as a JSON array with this exact structure:
 [
   {
     "word": "example",
-    "pronunciation": "/ɪɡˈzæmpəl/",
     "definition": "Clear definition here",
     "arabicTranslation": "مثال",
     "examples": ["Example 1: First sentence using the word.", "Example 2: Second sentence using the word."],

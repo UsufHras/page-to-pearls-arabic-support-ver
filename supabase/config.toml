@@ -1,1 +1,7 @@
 project_id = "umbvknqvqeokwzwaycta"
+
+[functions.extract-vocabulary]
+verify_jwt = false
+
+[functions.pronounce-word]
+verify_jwt = false
