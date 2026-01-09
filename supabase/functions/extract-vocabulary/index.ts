@@ -35,9 +35,10 @@ serve(async (req) => {
 
 1. The word exactly as it appears
 2. A clear, concise definition
-3. Two example sentences showing the word in context (label as "Example 1:" and "Example 2:")
-4. 2-3 synonyms
-5. 2-3 antonyms (if applicable, otherwise say "N/A")
+3. The Arabic translation of the word
+4. Two example sentences showing the word in context (label as "Example 1:" and "Example 2:")
+5. 2-3 synonyms
+6. 2-3 antonyms (if applicable, otherwise say "N/A")
 
 IMPORTANT: Return ONLY a valid JSON array. Do not include any text before or after the JSON.
 
@@ -46,6 +47,7 @@ Format your response as a JSON array with this exact structure:
   {
     "word": "example",
     "definition": "Clear definition here",
+    "arabicTranslation": "مثال",
     "examples": ["Example 1: First sentence using the word.", "Example 2: Second sentence using the word."],
     "synonyms": ["synonym1", "synonym2"],
     "antonyms": ["antonym1", "antonym2"]

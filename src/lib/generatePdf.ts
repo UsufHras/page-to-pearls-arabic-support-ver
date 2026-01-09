@@ -65,8 +65,8 @@ export function generateVocabularyPdf(vocabulary: VocabularyWord[]): void {
   yPos = margin;
 
   vocabulary.forEach((word, index) => {
-    // Estimate card height
-    const cardHeight = 95 + (word.examples.length * 12);
+    // Estimate card height (add extra for Arabic translation)
+    const cardHeight = 95 + (word.examples.length * 12) + (word.arabicTranslation ? 8 : 0);
     checkPageBreak(cardHeight);
 
     // Card background
@@ -88,6 +88,14 @@ export function generateVocabularyPdf(vocabulary: VocabularyWord[]): void {
     doc.setTextColor(...primaryColor);
     const wordTitle = word.word.charAt(0).toUpperCase() + word.word.slice(1);
     doc.text(wordTitle, margin + 20, yPos + 12);
+
+    // Arabic translation
+    if (word.arabicTranslation) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(14);
+      doc.setTextColor(...mutedColor);
+      doc.text(word.arabicTranslation, pageWidth - margin - 5, yPos + 12, { align: 'right' });
+    }
 
     yPos += 22;
 
