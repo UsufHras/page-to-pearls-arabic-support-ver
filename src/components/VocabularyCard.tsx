@@ -3,6 +3,7 @@ import { BookOpen, Quote, ArrowRightLeft } from 'lucide-react';
 
 export interface VocabularyWord {
   word: string;
+  pronunciation?: string;
   definition: string;
   arabicTranslation?: string;
   examples: string[];
@@ -26,9 +27,16 @@ export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
       {/* Word Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-2xl font-display font-bold text-primary capitalize">
-            {vocabulary.word}
-          </h3>
+          <div className="flex items-baseline gap-3">
+            <h3 className="text-2xl font-display font-bold text-primary capitalize">
+              {vocabulary.word}
+            </h3>
+            {vocabulary.pronunciation && (
+              <span className="text-sm text-muted-foreground font-mono">
+                {vocabulary.pronunciation}
+              </span>
+            )}
+          </div>
           {vocabulary.arabicTranslation && (
             <p className="text-lg text-muted-foreground font-arabic mt-1" dir="rtl">
               {vocabulary.arabicTranslation}
