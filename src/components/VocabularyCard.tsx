@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Quote, ArrowRightLeft } from 'lucide-react';
+import { BookOpen, Quote, ArrowRightLeft, Volume2, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export interface VocabularyWord {
   word: string;
@@ -17,6 +19,53 @@ interface VocabularyCardProps {
 }
 
 export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const playPronunciation = async () => {
+    if (isPlaying) return;
+    
+    setIsPlaying(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pronounce-word`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ word: vocabulary.word }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to get pronunciation');
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.onended = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      audio.onerror = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+        toast.error('Failed to play audio');
+      };
+      
+      await audio.play();
+    } catch (error) {
+      console.error('Pronunciation error:', error);
+      toast.error('Failed to play pronunciation');
+      setIsPlaying(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -27,15 +76,22 @@ export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
       {/* Word Header */}
       <div className="flex items-start justify-between">
         <div>
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-center gap-3">
             <h3 className="text-2xl font-display font-bold text-primary capitalize">
               {vocabulary.word}
             </h3>
-            {vocabulary.pronunciation && (
-              <span className="text-sm text-muted-foreground font-mono">
-                {vocabulary.pronunciation}
-              </span>
-            )}
+            <button
+              onClick={playPronunciation}
+              disabled={isPlaying}
+              className="p-1.5 rounded-full hover:bg-primary/10 transition-colors text-primary disabled:opacity-50"
+              aria-label="Play pronunciation"
+            >
+              {isPlaying ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Volume2 className="w-5 h-5" />
+              )}
+            </button>
           </div>
           {vocabulary.arabicTranslation && (
             <p className="text-lg text-muted-foreground font-arabic mt-1" dir="rtl">
