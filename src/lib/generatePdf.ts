@@ -1,8 +1,35 @@
 import jsPDF from 'jspdf';
 import { VocabularyWord } from '@/components/VocabularyCard';
 
-export function generateVocabularyPdf(vocabulary: VocabularyWord[]): void {
+// Load and register Arabic font
+async function loadArabicFont(doc: jsPDF): Promise<void> {
+  try {
+    // Fetch Amiri font (supports Arabic well in PDFs)
+    const fontUrl = 'https://cdn.jsdelivr.net/npm/@fontsource/amiri@5.0.18/files/amiri-arabic-400-normal.woff';
+    const response = await fetch(fontUrl);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    // Convert to base64
+    const base64 = btoa(
+      new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    );
+    
+    // Register the font
+    doc.addFileToVFS('Amiri-Regular.ttf', base64);
+    doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
+    return;
+  } catch (error) {
+    console.warn('Failed to load Arabic font, falling back to default:', error);
+  }
+}
+
+export async function generateVocabularyPdf(vocabulary: VocabularyWord[]): Promise<void> {
   const doc = new jsPDF();
+  
+  // Load Arabic font
+  await loadArabicFont(doc);
+  const hasArabicFont = doc.getFontList()['Amiri'] !== undefined;
+  
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
@@ -90,11 +117,12 @@ export function generateVocabularyPdf(vocabulary: VocabularyWord[]): void {
     doc.text(wordTitle, margin + 20, yPos + 12);
 
     // Arabic translation
-    if (word.arabicTranslation) {
-      doc.setFont('helvetica', 'normal');
+    if (word.arabicTranslation && hasArabicFont) {
+      doc.setFont('Amiri', 'normal');
       doc.setFontSize(14);
       doc.setTextColor(...mutedColor);
       doc.text(word.arabicTranslation, pageWidth - margin - 5, yPos + 12, { align: 'right' });
+      doc.setFont('helvetica', 'normal'); // Reset font
     }
 
     yPos += 22;
