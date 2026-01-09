@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         display: ["Playfair Display", "serif"],
         body: ["Source Sans 3", "sans-serif"],
+        arabic: ["Noto Sans Arabic", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

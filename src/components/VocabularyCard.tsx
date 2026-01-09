@@ -4,6 +4,7 @@ import { BookOpen, Quote, ArrowRightLeft } from 'lucide-react';
 export interface VocabularyWord {
   word: string;
   definition: string;
+  arabicTranslation?: string;
   examples: string[];
   synonyms: string[];
   antonyms: string[];
@@ -28,6 +29,11 @@ export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
           <h3 className="text-2xl font-display font-bold text-primary capitalize">
             {vocabulary.word}
           </h3>
+          {vocabulary.arabicTranslation && (
+            <p className="text-lg text-muted-foreground font-arabic mt-1" dir="rtl">
+              {vocabulary.arabicTranslation}
+            </p>
+          )}
         </div>
         <span className="px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
           #{index + 1}
