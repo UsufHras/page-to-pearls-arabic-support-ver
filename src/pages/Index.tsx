@@ -56,12 +56,12 @@ const Index = () => {
     }
   };
 
-  const handleGeneratePdf = () => {
+  const handleGeneratePdf = async () => {
     if (!vocabulary) return;
     setIsGeneratingPdf(true);
     
     try {
-      generateVocabularyPdf(vocabulary);
+      await generateVocabularyPdf(vocabulary);
       toast({
         title: 'PDF Generated!',
         description: 'Your vocabulary document has been downloaded.',
