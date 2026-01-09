@@ -1,35 +1,50 @@
 import jsPDF from 'jspdf';
 import { VocabularyWord } from '@/components/VocabularyCard';
 
-// Load and register Arabic font
-async function loadArabicFont(doc: jsPDF): Promise<void> {
+
+let amiriFontBase64: string | null = null;
+
+async function fetchAsBase64(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch font: ${res.status}`);
+
+  const blob = await res.blob();
+
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read font blob'));
+    reader.onload = () => {
+      const dataUrl = String(reader.result);
+      const base64 = dataUrl.split(',')[1];
+      if (!base64) return reject(new Error('Invalid font data URL'));
+      resolve(base64);
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
+// Load and register Arabic font (for proper Arabic glyphs in PDF)
+async function loadArabicFont(doc: jsPDF): Promise<boolean> {
   try {
-    // Fetch Amiri font (supports Arabic well in PDFs)
-    const fontUrl = 'https://cdn.jsdelivr.net/npm/@fontsource/amiri@5.0.18/files/amiri-arabic-400-normal.woff';
-    const response = await fetch(fontUrl);
-    const arrayBuffer = await response.arrayBuffer();
-    
-    // Convert to base64
-    const base64 = btoa(
-      new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-    );
-    
-    // Register the font
-    doc.addFileToVFS('Amiri-Regular.ttf', base64);
+    if (!amiriFontBase64) {
+      // Served from /public
+      amiriFontBase64 = await fetchAsBase64('/fonts/Amiri-Regular.ttf');
+    }
+
+    doc.addFileToVFS('Amiri-Regular.ttf', amiriFontBase64);
     doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
-    return;
+    return true;
   } catch (error) {
     console.warn('Failed to load Arabic font, falling back to default:', error);
+    return false;
   }
 }
 
 export async function generateVocabularyPdf(vocabulary: VocabularyWord[]): Promise<void> {
   const doc = new jsPDF();
-  
-  // Load Arabic font
-  await loadArabicFont(doc);
-  const hasArabicFont = doc.getFontList()['Amiri'] !== undefined;
-  
+
+  const hasArabicFont = await loadArabicFont(doc);
+
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
