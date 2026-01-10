@@ -37,8 +37,9 @@ serve(async (req) => {
 2. A clear, concise definition
 3. The Arabic translation of the word
 4. Two example sentences showing the word in context (label as "Example 1:" and "Example 2:")
-5. 2-3 synonyms
-6. 2-3 antonyms (if applicable, otherwise say "N/A")
+5. 3-5 common collocations (words often used with this word, e.g., "~ truth", "~ change", "~ principle")
+6. 2-3 synonyms
+7. 2-3 antonyms (if applicable, otherwise say "N/A")
 
 IMPORTANT: Return ONLY a valid JSON array. Do not include any text before or after the JSON.
 
@@ -49,6 +50,7 @@ Format your response as a JSON array with this exact structure:
     "definition": "Clear definition here",
     "arabicTranslation": "مثال",
     "examples": ["Example 1: First sentence using the word.", "Example 2: Second sentence using the word."],
+    "collocations": ["~ truth", "~ change", "~ principle"],
     "synonyms": ["synonym1", "synonym2"],
     "antonyms": ["antonym1", "antonym2"]
   }
