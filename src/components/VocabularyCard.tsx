@@ -9,6 +9,7 @@ export interface VocabularyWord {
   definition: string;
   arabicTranslation?: string;
   examples: string[];
+  collocations?: string[];
   synonyms: string[];
   antonyms: string[];
 }
@@ -129,6 +130,18 @@ export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
           ))}
         </div>
       </div>
+
+      {/* Often Used With */}
+      {vocabulary.collocations && vocabulary.collocations.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <span className="px-2 py-0.5 text-xs font-semibold rounded bg-accent text-accent-foreground uppercase">Often used with</span>
+          </div>
+          <p className="text-foreground pl-6">
+            {vocabulary.collocations.join(', ')}
+          </p>
+        </div>
+      )}
 
       {/* Synonyms & Antonyms */}
       <div className="grid grid-cols-2 gap-4 pt-2">
