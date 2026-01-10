@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { word } = await req.json();
+    const { word, accent = 'us' } = await req.json();
 
     if (!word) {
       return new Response(
@@ -29,10 +29,15 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Generating pronunciation for: ${word}`);
+    // Voice IDs: American vs British English
+    // American: JBFqnCBsd6RMkjVDRZzb (George)
+    // British: TX3LPaxmHKxFdv7VOQHJ (Liam - British accent)
+    const voiceId = accent === 'uk' ? 'TX3LPaxmHKxFdv7VOQHJ' : 'JBFqnCBsd6RMkjVDRZzb';
+
+    console.log(`Generating ${accent.toUpperCase()} pronunciation for: ${word}`);
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
       {
         method: 'POST',
         headers: {

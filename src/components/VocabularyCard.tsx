@@ -20,12 +20,12 @@ interface VocabularyCardProps {
 }
 
 export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [playingAccent, setPlayingAccent] = useState<'us' | 'uk' | null>(null);
 
-  const playPronunciation = async () => {
-    if (isPlaying) return;
+  const playPronunciation = async (accent: 'us' | 'uk') => {
+    if (playingAccent) return;
     
-    setIsPlaying(true);
+    setPlayingAccent(accent);
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pronounce-word`,
@@ -36,7 +36,7 @@ export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
             'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ word: vocabulary.word }),
+          body: JSON.stringify({ word: vocabulary.word, accent }),
         }
       );
 
@@ -49,12 +49,12 @@ export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
       const audio = new Audio(audioUrl);
       
       audio.onended = () => {
-        setIsPlaying(false);
+        setPlayingAccent(null);
         URL.revokeObjectURL(audioUrl);
       };
       
       audio.onerror = () => {
-        setIsPlaying(false);
+        setPlayingAccent(null);
         URL.revokeObjectURL(audioUrl);
         toast.error('Failed to play audio');
       };
@@ -63,7 +63,7 @@ export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
     } catch (error) {
       console.error('Pronunciation error:', error);
       toast.error('Failed to play pronunciation');
-      setIsPlaying(false);
+      setPlayingAccent(null);
     }
   };
 
@@ -81,18 +81,34 @@ export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
             <h3 className="text-2xl font-display font-bold text-primary capitalize">
               {vocabulary.word}
             </h3>
-            <button
-              onClick={playPronunciation}
-              disabled={isPlaying}
-              className="p-1.5 rounded-full hover:bg-primary/10 transition-colors text-primary disabled:opacity-50"
-              aria-label="Play pronunciation"
-            >
-              {isPlaying ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Volume2 className="w-5 h-5" />
-              )}
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => playPronunciation('us')}
+                disabled={playingAccent !== null}
+                className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-primary/10 transition-colors text-primary disabled:opacity-50 text-xs font-medium"
+                aria-label="Play American pronunciation"
+              >
+                {playingAccent === 'us' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Volume2 className="w-4 h-4" />
+                )}
+                <span>US</span>
+              </button>
+              <button
+                onClick={() => playPronunciation('uk')}
+                disabled={playingAccent !== null}
+                className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-primary/10 transition-colors text-primary disabled:opacity-50 text-xs font-medium"
+                aria-label="Play British pronunciation"
+              >
+                {playingAccent === 'uk' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Volume2 className="w-4 h-4" />
+                )}
+                <span>UK</span>
+              </button>
+            </div>
           </div>
           {vocabulary.arabicTranslation && (
             <p className="text-lg text-muted-foreground font-arabic mt-1" dir="rtl">
