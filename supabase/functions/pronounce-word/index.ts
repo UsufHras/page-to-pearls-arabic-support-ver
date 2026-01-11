@@ -30,9 +30,9 @@ serve(async (req) => {
     }
 
     // Voice IDs: American vs British English
-    // American: JBFqnCBsd6RMkjVDRZzb (George)
-    // British: TX3LPaxmHKxFdv7VOQHJ (Liam - British accent)
-    const voiceId = accent === 'uk' ? 'TX3LPaxmHKxFdv7VOQHJ' : 'JBFqnCBsd6RMkjVDRZzb';
+    // American: JBFqnCBsd6RMkjVDRZzb (George - American)
+    // British: onwK4e9ZLuTAKqWW03F9 (Daniel - British accent)
+    const voiceId = accent === 'uk' ? 'onwK4e9ZLuTAKqWW03F9' : 'JBFqnCBsd6RMkjVDRZzb';
 
     console.log(`Generating ${accent.toUpperCase()} pronunciation for: ${word}`);
 
