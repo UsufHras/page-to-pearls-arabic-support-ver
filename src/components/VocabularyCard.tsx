@@ -83,19 +83,6 @@ export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
             </h3>
             <div className="flex items-center gap-1">
               <button
-                onClick={() => playPronunciation('us')}
-                disabled={playingAccent !== null}
-                className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-primary/10 transition-colors text-primary disabled:opacity-50 text-xs font-medium"
-                aria-label="Play American pronunciation"
-              >
-                {playingAccent === 'us' ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Volume2 className="w-4 h-4" />
-                )}
-                <span>US</span>
-              </button>
-              <button
                 onClick={() => playPronunciation('uk')}
                 disabled={playingAccent !== null}
                 className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-primary/10 transition-colors text-primary disabled:opacity-50 text-xs font-medium"
@@ -107,6 +94,19 @@ export function VocabularyCard({ vocabulary, index }: VocabularyCardProps) {
                   <Volume2 className="w-4 h-4" />
                 )}
                 <span>UK</span>
+              </button>
+              <button
+                onClick={() => playPronunciation('us')}
+                disabled={playingAccent !== null}
+                className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-primary/10 transition-colors text-primary disabled:opacity-50 text-xs font-medium"
+                aria-label="Play American pronunciation"
+              >
+                {playingAccent === 'us' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Volume2 className="w-4 h-4" />
+                )}
+                <span>US</span>
               </button>
             </div>
           </div>
