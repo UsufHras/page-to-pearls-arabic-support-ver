@@ -107,8 +107,9 @@ export async function generateVocabularyPdf(vocabulary: VocabularyWord[]): Promi
   yPos = margin;
 
   vocabulary.forEach((word, index) => {
-    // Estimate card height (add extra for Arabic translation)
-    const cardHeight = 95 + (word.examples.length * 12) + (word.arabicTranslation ? 8 : 0);
+    // Estimate card height (add extra for Arabic translation and collocations)
+    const hasCollocations = word.collocations && word.collocations.length > 0;
+    const cardHeight = 95 + (word.examples.length * 12) + (word.arabicTranslation ? 8 : 0) + (hasCollocations ? 20 : 0);
     checkPageBreak(cardHeight);
 
     // Card background
@@ -177,6 +178,33 @@ export async function generateVocabularyPdf(vocabulary: VocabularyWord[]): Promi
     });
 
     yPos += 4;
+
+    // Collocations section (Often Used With)
+    if (hasCollocations) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...mutedColor);
+      doc.text('OFTEN USED WITH', margin, yPos);
+      yPos += 6;
+
+      // Collocation pills
+      let colX = margin;
+      doc.setFontSize(8);
+      word.collocations!.forEach((col) => {
+        const colWidth = doc.getTextWidth(col) + 8;
+        if (colX + colWidth > pageWidth - margin) {
+          colX = margin;
+          yPos += 8;
+        }
+        doc.setFillColor(245, 240, 230); // Warm beige background
+        doc.roundedRect(colX, yPos - 4, colWidth, 7, 1.5, 1.5, 'F');
+        doc.setTextColor(...accentColor);
+        doc.text(col, colX + 4, yPos);
+        colX += colWidth + 4;
+      });
+
+      yPos += 10;
+    }
 
     // Synonyms & Antonyms row
     const halfWidth = (contentWidth - 10) / 2;
