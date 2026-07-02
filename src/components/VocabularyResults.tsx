@@ -7,14 +7,16 @@ interface VocabularyResultsProps {
   vocabulary: VocabularyWord[];
   onGeneratePdf: () => void;
   onReset: () => void;
+  onUpdateWord: (index: number, updated: VocabularyWord) => void;
   isGeneratingPdf: boolean;
 }
 
-export function VocabularyResults({ 
-  vocabulary, 
-  onGeneratePdf, 
+export function VocabularyResults({
+  vocabulary,
+  onGeneratePdf,
   onReset,
-  isGeneratingPdf 
+  onUpdateWord,
+  isGeneratingPdf,
 }: VocabularyResultsProps) {
   return (
     <motion.div
@@ -30,15 +32,11 @@ export function VocabularyResults({
             Extracted Vocabulary
           </h2>
           <p className="text-muted-foreground mt-1">
-            {vocabulary.length} word{vocabulary.length !== 1 ? 's' : ''} found in your book page
+            {vocabulary.length} word{vocabulary.length !== 1 ? 's' : ''} found · tap the pencil to edit before export
           </p>
         </div>
         <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={onReset}
-            className="gap-2"
-          >
+          <Button variant="outline" onClick={onReset} className="gap-2">
             <RotateCcw className="w-4 h-4" />
             New Page
           </Button>
@@ -56,7 +54,12 @@ export function VocabularyResults({
       {/* Vocabulary Cards Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {vocabulary.map((word, index) => (
-          <VocabularyCard key={index} vocabulary={word} index={index} />
+          <VocabularyCard
+            key={index}
+            vocabulary={word}
+            index={index}
+            onUpdate={(updated) => onUpdateWord(index, updated)}
+          />
         ))}
       </div>
     </motion.div>
