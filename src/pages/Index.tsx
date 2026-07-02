@@ -82,6 +82,15 @@ const Index = () => {
     setSelectedImage(null);
   };
 
+  const handleUpdateWord = (index: number, updated: VocabularyWord) => {
+    setVocabulary((prev) => {
+      if (!prev) return prev;
+      const next = [...prev];
+      next[index] = updated;
+      return next;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -194,6 +203,7 @@ const Index = () => {
             vocabulary={vocabulary}
             onGeneratePdf={handleGeneratePdf}
             onReset={handleReset}
+            onUpdateWord={handleUpdateWord}
             isGeneratingPdf={isGeneratingPdf}
           />
         )}

@@ -132,6 +132,20 @@ export async function generateVocabularyPdf(vocabulary: VocabularyWord[]): Promi
     const wordTitle = word.word.charAt(0).toUpperCase() + word.word.slice(1);
     doc.text(wordTitle, margin + 20, yPos + 12);
 
+    // CEFR difficulty badge (right after the word title)
+    if (word.difficulty) {
+      const wordTitleWidth = doc.getTextWidth(wordTitle);
+      const badgeX = margin + 20 + wordTitleWidth + 4;
+      const badgeText = word.difficulty;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      const badgeWidth = doc.getTextWidth(badgeText) + 6;
+      doc.setFillColor(...accentColor);
+      doc.roundedRect(badgeX, yPos + 6, badgeWidth, 8, 2, 2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.text(badgeText, badgeX + badgeWidth / 2, yPos + 11.5, { align: 'center' });
+    }
+
     // Arabic translation
     if (word.arabicTranslation && hasArabicFont) {
       doc.setFont('Amiri', 'normal');
