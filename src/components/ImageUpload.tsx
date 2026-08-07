@@ -198,7 +198,7 @@ export function ImageUpload({ images, onImagesChange, isProcessing }: ImageUploa
               </div>
             )}
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );
