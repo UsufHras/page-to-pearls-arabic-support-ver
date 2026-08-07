@@ -13,22 +13,22 @@ const Index = () => {
   const [vocabulary, setVocabulary] = useState<VocabularyWord[] | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const { toast } = useToast();
 
-  const handleImageSelect = (base64: string) => {
-    setSelectedImage(base64);
+  const handleImagesChange = (images: string[]) => {
+    setSelectedImages(images);
     setVocabulary(null);
   };
 
   const handleExtract = async () => {
-    if (!selectedImage) return;
-    
+    if (selectedImages.length === 0) return;
+
     setIsProcessing(true);
-    
+
     try {
       const { data, error } = await supabase.functions.invoke('extract-vocabulary', {
-        body: { imageBase64: selectedImage }
+        body: { imagesBase64: selectedImages }
       });
 
       if (error) {
@@ -39,7 +39,7 @@ const Index = () => {
         setVocabulary(data.vocabulary);
         toast({
           title: 'Success!',
-          description: `Extracted ${data.vocabulary.length} vocabulary words.`,
+          description: `Extracted ${data.vocabulary.length} vocabulary words from ${selectedImages.length} page${selectedImages.length !== 1 ? 's' : ''}.`,
         });
       } else {
         throw new Error(data.error || 'Failed to extract vocabulary');
@@ -48,7 +48,7 @@ const Index = () => {
       console.error('Extraction error:', error);
       toast({
         title: 'Extraction Failed',
-        description: error instanceof Error ? error.message : 'Failed to process image',
+        description: error instanceof Error ? error.message : 'Failed to process images',
         variant: 'destructive',
       });
     } finally {
