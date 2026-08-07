@@ -135,19 +135,20 @@ const Index = () => {
               </h2>
               
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Upload a page from your book with highlighted words, and let AI extract
+                Upload one or more pages from your book with highlighted words, and let AI extract
                 definitions, examples, synonyms, and antonyms—all in a beautiful PDF.
               </p>
             </div>
 
             {/* Upload Section */}
             <div className="max-w-2xl mx-auto space-y-6">
-              <ImageUpload 
-                onImageSelect={handleImageSelect} 
-                isProcessing={isProcessing} 
+              <ImageUpload
+                images={selectedImages}
+                onImagesChange={handleImagesChange}
+                isProcessing={isProcessing}
               />
-              
-              {selectedImage && !isProcessing && (
+
+              {selectedImages.length > 0 && !isProcessing && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
