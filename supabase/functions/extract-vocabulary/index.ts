@@ -98,9 +98,6 @@ If you cannot identify any highlighted words, return an empty array: []`;
         ],
       }),
     });
-        ],
-      }),
-    });
 
     if (!response.ok) {
       const errorText = await response.text();
