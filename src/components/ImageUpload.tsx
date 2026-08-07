@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Image as ImageIcon, X, Plus } from 'lucide-react';
+import { Upload, Image as ImageIcon, X, Plus, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ImageUploadProps {
