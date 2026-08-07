@@ -11,11 +11,23 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64 } = await req.json();
+    const body = await req.json();
+    const images: string[] = Array.isArray(body.imagesBase64)
+      ? body.imagesBase64
+      : body.imageBase64
+        ? [body.imageBase64]
+        : [];
 
-    if (!imageBase64) {
+    if (images.length === 0) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Image is required' }),
+        JSON.stringify({ success: false, error: 'At least one image is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (images.length > 10) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Maximum 10 pages per request' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
