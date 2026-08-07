@@ -140,17 +140,31 @@ export function ImageUpload({ images, onImagesChange, isProcessing }: ImageUploa
               ))}
 
               {!isProcessing && (
-                <label className="relative flex flex-col items-center justify-center h-40 cursor-pointer card-paper border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleInputChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <Plus className="w-6 h-6 text-muted-foreground" />
-                  <span className="mt-2 text-sm text-muted-foreground">Add page</span>
-                </label>
+                <>
+                  <label className="relative flex flex-col items-center justify-center h-40 cursor-pointer card-paper border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleInputChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <Plus className="w-6 h-6 text-muted-foreground" />
+                    <span className="mt-2 text-sm text-muted-foreground">Add page</span>
+                  </label>
+
+                  <label className="relative flex flex-col items-center justify-center h-40 cursor-pointer card-paper border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleInputChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <Camera className="w-6 h-6 text-muted-foreground" />
+                    <span className="mt-2 text-sm text-muted-foreground">Take photo</span>
+                  </label>
+                </>
               )}
             </div>
 
