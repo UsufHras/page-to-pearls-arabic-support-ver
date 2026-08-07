@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Image as ImageIcon, X, Plus } from 'lucide-react';
+import { Upload, Image as ImageIcon, X, Plus, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ImageUploadProps {
@@ -107,7 +107,25 @@ export function ImageUpload({ images, onImagesChange, isProcessing }: ImageUploa
               </div>
             </motion.div>
           </motion.label>
-        ) : (
+        ) : null}
+      </AnimatePresence>
+
+      {images.length === 0 && !isProcessing && (
+        <label className="flex items-center justify-center gap-2 w-full py-3 rounded-lg cursor-pointer card-paper border border-border hover:border-primary/50 hover:bg-muted/50 transition-colors">
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleInputChange}
+            className="hidden"
+          />
+          <Camera className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">Take a photo with your camera</span>
+        </label>
+      )}
+
+      <AnimatePresence mode="wait">
+        {images.length > 0 ? (
           <motion.div
             key="preview"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -140,17 +158,31 @@ export function ImageUpload({ images, onImagesChange, isProcessing }: ImageUploa
               ))}
 
               {!isProcessing && (
-                <label className="relative flex flex-col items-center justify-center h-40 cursor-pointer card-paper border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleInputChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <Plus className="w-6 h-6 text-muted-foreground" />
-                  <span className="mt-2 text-sm text-muted-foreground">Add page</span>
-                </label>
+                <>
+                  <label className="relative flex flex-col items-center justify-center h-40 cursor-pointer card-paper border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleInputChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <Plus className="w-6 h-6 text-muted-foreground" />
+                    <span className="mt-2 text-sm text-muted-foreground">Add page</span>
+                  </label>
+
+                  <label className="relative flex flex-col items-center justify-center h-40 cursor-pointer card-paper border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleInputChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <Camera className="w-6 h-6 text-muted-foreground" />
+                    <span className="mt-2 text-sm text-muted-foreground">Take photo</span>
+                  </label>
+                </>
               )}
             </div>
 
@@ -166,7 +198,7 @@ export function ImageUpload({ images, onImagesChange, isProcessing }: ImageUploa
               </div>
             )}
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );
