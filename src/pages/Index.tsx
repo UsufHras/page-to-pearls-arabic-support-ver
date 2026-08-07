@@ -79,7 +79,7 @@ const Index = () => {
 
   const handleReset = () => {
     setVocabulary(null);
-    setSelectedImage(null);
+    setSelectedImages([]);
   };
 
   const handleUpdateWord = (index: number, updated: VocabularyWord) => {
