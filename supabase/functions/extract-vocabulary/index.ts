@@ -41,9 +41,9 @@ serve(async (req) => {
       );
     }
 
-    console.log('Processing image for vocabulary extraction...');
+    console.log(`Processing ${images.length} image(s) for vocabulary extraction...`);
 
-    const systemPrompt = `You are a vocabulary extraction expert. Analyze the image of a book page and identify ALL highlighted or marked words. For each highlighted word, provide:
+    const systemPrompt = `You are a vocabulary extraction expert. Analyze the image(s) of book pages and identify ALL highlighted or marked words across ALL pages. Merge duplicates (a word highlighted on more than one page should appear only once). For each highlighted word, provide:
 
 1. The word exactly as it appears
 2. A clear, concise definition
@@ -87,16 +87,17 @@ If you cannot identify any highlighted words, return an empty array: []`;
             content: [
               {
                 type: 'text',
-                text: 'Please analyze this book page image and extract all highlighted/marked words with their definitions, examples, synonyms, and antonyms.'
+                text: `Please analyze these ${images.length} book page image(s) and extract all highlighted/marked words with their definitions, examples, synonyms, and antonyms. Combine the results from all pages into one JSON array, without duplicates.`
               },
-              {
+              ...images.map((url: string) => ({
                 type: 'image_url',
-                image_url: {
-                  url: imageBase64
-                }
-              }
+                image_url: { url }
+              }))
             ]
           }
+        ],
+      }),
+    });
         ],
       }),
     });
