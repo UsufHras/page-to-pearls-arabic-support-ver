@@ -107,7 +107,25 @@ export function ImageUpload({ images, onImagesChange, isProcessing }: ImageUploa
               </div>
             </motion.div>
           </motion.label>
-        ) : (
+        ) : null}
+      </AnimatePresence>
+
+      {images.length === 0 && !isProcessing && (
+        <label className="flex items-center justify-center gap-2 w-full py-3 rounded-lg cursor-pointer card-paper border border-border hover:border-primary/50 hover:bg-muted/50 transition-colors">
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleInputChange}
+            className="hidden"
+          />
+          <Camera className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">Take a photo with your camera</span>
+        </label>
+      )}
+
+      <AnimatePresence mode="wait">
+        {images.length > 0 ? (
           <motion.div
             key="preview"
             initial={{ opacity: 0, scale: 0.95 }}
