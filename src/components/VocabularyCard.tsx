@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Quote, ArrowRightLeft, Volume2, Loader2, Pencil, Check, X } from 'lucide-react';
+import { BookOpen, Quote, ArrowRightLeft, Volume2, Loader2, Pencil, Check, X, Youtube } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -176,6 +176,16 @@ export function VocabularyCard({ vocabulary, index, onUpdate }: VocabularyCardPr
                   {playingAccent === 'uk' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Volume2 className="w-4 h-4" />}
                   <span>UK</span>
                 </button>
+                <a
+                  href={`https://youglish.com/pronounce/${encodeURIComponent(vocabulary.word)}/english`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-primary/10 transition-colors text-primary text-xs font-medium"
+                  aria-label={`Watch real-world usage of ${vocabulary.word} on YouGlish`}
+                >
+                  <Youtube className="w-4 h-4" />
+                  <span>YouGlish</span>
+                </a>
               </div>
             )}
           </div>
