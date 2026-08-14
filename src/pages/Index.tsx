@@ -8,6 +8,7 @@ import { generateVocabularyPdf } from '@/lib/generatePdf';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Index = () => {
   const [vocabulary, setVocabulary] = useState<VocabularyWord[] | null>(null);
@@ -96,14 +97,17 @@ const Index = () => {
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <BookOpen className="w-6 h-6 text-primary" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <BookOpen className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-xl font-display font-bold text-foreground">Lexicon</h1>
+                <p className="text-xs text-muted-foreground">Vocabulary Extraction</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-display font-bold text-foreground">Lexicon</h1>
-              <p className="text-xs text-muted-foreground">Vocabulary Extraction</p>
-            </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>

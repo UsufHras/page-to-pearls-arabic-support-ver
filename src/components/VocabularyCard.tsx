@@ -27,12 +27,12 @@ interface VocabularyCardProps {
 }
 
 const DIFFICULTY_STYLES: Record<CefrLevel, string> = {
-  A1: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30',
-  A2: 'bg-teal-500/15 text-teal-700 border-teal-500/30',
-  B1: 'bg-amber-500/15 text-amber-700 border-amber-500/30',
-  B2: 'bg-orange-500/15 text-orange-700 border-orange-500/30',
-  C1: 'bg-red-500/15 text-red-700 border-red-500/30',
-  C2: 'bg-purple-500/15 text-purple-700 border-purple-500/30',
+  A1: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+  A2: 'bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30',
+  B1: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+  B2: 'bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30',
+  C1: 'bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30',
+  C2: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
 };
 
 const DIFFICULTY_LABELS: Record<CefrLevel, string> = {
