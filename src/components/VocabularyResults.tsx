@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { VocabularyCard, VocabularyWord } from './VocabularyCard';
 import { Button } from '@/components/ui/button';
-import { FileDown, RotateCcw } from 'lucide-react';
+import { FileDown, RotateCcw, GraduationCap } from 'lucide-react';
+import { FlashcardMode } from './FlashcardMode';
 
 interface VocabularyResultsProps {
   vocabulary: VocabularyWord[];
@@ -18,6 +20,8 @@ export function VocabularyResults({
   onUpdateWord,
   isGeneratingPdf,
 }: VocabularyResultsProps) {
+  const [isStudying, setIsStudying] = useState(false);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -36,6 +40,15 @@ export function VocabularyResults({
           </p>
         </div>
         <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setIsStudying(true)}
+            disabled={vocabulary.length === 0}
+            className="gap-2"
+          >
+            <GraduationCap className="w-4 h-4" />
+            Study
+          </Button>
           <Button variant="outline" onClick={onReset} className="gap-2">
             <RotateCcw className="w-4 h-4" />
             New Page
@@ -62,6 +75,10 @@ export function VocabularyResults({
           />
         ))}
       </div>
+
+      {isStudying && (
+        <FlashcardMode vocabulary={vocabulary} onClose={() => setIsStudying(false)} />
+      )}
     </motion.div>
   );
 }
