@@ -8,6 +8,7 @@ import { generateVocabularyPdf } from '@/lib/generatePdf';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Index = () => {
   const [vocabulary, setVocabulary] = useState<VocabularyWord[] | null>(null);
