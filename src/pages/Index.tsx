@@ -9,12 +9,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSelect } from '@/components/LanguageSelect';
+import { getLanguage, loadStoredLanguageCode, LANGUAGE_STORAGE_KEY } from '@/lib/languages';
 
 const Index = () => {
   const [vocabulary, setVocabulary] = useState<VocabularyWord[] | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [languageCode, setLanguageCode] = useState<string>(() => loadStoredLanguageCode());
+  const language = getLanguage(languageCode);
+
+  const handleLanguageChange = (code: string) => {
+    setLanguageCode(code);
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, code);
+  };
   const { toast } = useToast();
 
   const handleImagesChange = (images: string[]) => {
@@ -29,7 +38,11 @@ const Index = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('extract-vocabulary', {
-        body: { imagesBase64: selectedImages }
+        body: {
+          imagesBase64: selectedImages,
+          targetLanguage: language.name,
+          targetLanguageCode: language.code,
+        }
       });
 
       if (error) {
@@ -62,7 +75,7 @@ const Index = () => {
     setIsGeneratingPdf(true);
     
     try {
-      await generateVocabularyPdf(vocabulary);
+      await generateVocabularyPdf(vocabulary, language);
       toast({
         title: 'PDF Generated!',
         description: 'Your vocabulary document has been downloaded.',
@@ -139,13 +152,22 @@ const Index = () => {
               </h2>
               
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Upload one or more pages from your book with highlighted words, and let AI extract
-                definitions, examples, synonyms, and antonyms—all in a beautiful PDF.
+                Upload one or more pages from your book with highlighted words, pick your mother
+                tongue, and let AI extract definitions, translations, examples, synonyms, and
+                antonyms—all in a beautiful PDF.
               </p>
             </div>
 
             {/* Upload Section */}
             <div className="max-w-2xl mx-auto space-y-6">
+              <div className="card-paper p-5">
+                <LanguageSelect
+                  value={languageCode}
+                  onChange={handleLanguageChange}
+                  disabled={isProcessing}
+                />
+              </div>
+
               <ImageUpload
                 images={selectedImages}
                 onImagesChange={handleImagesChange}
@@ -210,6 +232,7 @@ const Index = () => {
             onReset={handleReset}
             onUpdateWord={handleUpdateWord}
             isGeneratingPdf={isGeneratingPdf}
+            language={language}
           />
         )}
       </main>

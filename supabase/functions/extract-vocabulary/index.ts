@@ -32,6 +32,10 @@ serve(async (req) => {
       );
     }
 
+    const targetLanguage: string = typeof body.targetLanguage === 'string' && body.targetLanguage.trim()
+      ? body.targetLanguage.trim()
+      : 'Arabic';
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       console.error('LOVABLE_API_KEY not configured');
@@ -48,7 +52,7 @@ serve(async (req) => {
 1. The word exactly as it appears
 2. A clear, concise definition
 3. The CEFR difficulty level of the word: one of "A1", "A2", "B1", "B2", "C1", "C2"
-4. The Arabic translation of the word
+4. The ${targetLanguage} translation of the word
 5. Two example sentences showing the word in context (label as "Example 1:" and "Example 2:")
 6. 3-5 common collocations (words often used with this word, e.g., "~ truth", "~ change", "~ principle")
 7. 2-3 synonyms
@@ -62,7 +66,7 @@ Format your response as a JSON array with this exact structure:
     "word": "example",
     "definition": "Clear definition here",
     "difficulty": "B1",
-    "arabicTranslation": "مثال",
+    "translation": "<translation of the word in ${targetLanguage}>",
     "examples": ["Example 1: First sentence using the word.", "Example 2: Second sentence using the word."],
     "collocations": ["~ truth", "~ change", "~ principle"],
     "synonyms": ["synonym1", "synonym2"],
@@ -87,7 +91,7 @@ If you cannot identify any highlighted words, return an empty array: []`;
             content: [
               {
                 type: 'text',
-                text: `Please analyze these ${images.length} book page image(s) and extract all highlighted/marked words with their definitions, examples, synonyms, and antonyms. Combine the results from all pages into one JSON array, without duplicates.`
+                text: `Please analyze these ${images.length} book page image(s) and extract all highlighted/marked words with their definitions, ${targetLanguage} translations, examples, synonyms, and antonyms. Combine the results from all pages into one JSON array, without duplicates.`
               },
               ...images.map((url: string) => ({
                 type: 'image_url',
