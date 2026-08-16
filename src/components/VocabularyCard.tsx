@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { getLanguage, TargetLanguage } from '@/lib/languages';
 
 export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 
@@ -13,6 +14,9 @@ export interface VocabularyWord {
   pronunciation?: string;
   definition: string;
   difficulty?: CefrLevel;
+  /** Translation into the user's mother tongue */
+  translation?: string;
+  /** @deprecated kept for backwards compatibility with older extractions */
   arabicTranslation?: string;
   examples: string[];
   collocations?: string[];
@@ -24,6 +28,11 @@ interface VocabularyCardProps {
   vocabulary: VocabularyWord;
   index: number;
   onUpdate?: (updated: VocabularyWord) => void;
+  language?: TargetLanguage;
+}
+
+export function getWordTranslation(word: VocabularyWord): string {
+  return word.translation ?? word.arabicTranslation ?? '';
 }
 
 const DIFFICULTY_STYLES: Record<CefrLevel, string> = {
@@ -44,7 +53,8 @@ const DIFFICULTY_LABELS: Record<CefrLevel, string> = {
   C2: 'Proficient',
 };
 
-export function VocabularyCard({ vocabulary, index, onUpdate }: VocabularyCardProps) {
+export function VocabularyCard({ vocabulary, index, onUpdate, language }: VocabularyCardProps) {
+  const lang = language ?? getLanguage(undefined);
   const [playingAccent, setPlayingAccent] = useState<'us' | 'uk' | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<VocabularyWord>(vocabulary);
@@ -219,16 +229,19 @@ export function VocabularyCard({ vocabulary, index, onUpdate }: VocabularyCardPr
 
           {isEditing ? (
             <Input
-              dir="rtl"
-              placeholder="Arabic translation"
-              value={draft.arabicTranslation ?? ''}
-              onChange={(e) => setDraft({ ...draft, arabicTranslation: e.target.value })}
-              className="mt-2 text-lg font-arabic"
+              dir={lang.rtl ? 'rtl' : 'ltr'}
+              placeholder={`${lang.name} translation`}
+              value={getWordTranslation(draft)}
+              onChange={(e) => setDraft({ ...draft, translation: e.target.value, arabicTranslation: undefined })}
+              className={cn('mt-2 text-lg', lang.script === 'arabic' && 'font-arabic')}
             />
           ) : (
-            vocabulary.arabicTranslation && (
-              <p className="text-lg text-muted-foreground font-arabic mt-1" dir="rtl">
-                {vocabulary.arabicTranslation}
+            getWordTranslation(vocabulary) && (
+              <p
+                className={cn('text-lg text-muted-foreground mt-1', lang.script === 'arabic' && 'font-arabic')}
+                dir={lang.rtl ? 'rtl' : 'ltr'}
+              >
+                {getWordTranslation(vocabulary)}
               </p>
             )
           )}
