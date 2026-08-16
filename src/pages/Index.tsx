@@ -127,7 +127,7 @@ const Index = () => {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent-foreground"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/15 text-accent border border-accent/25"
               >
                 <Sparkles className="w-4 h-4" />
                 <span className="text-sm font-medium">AI-Powered Extraction</span>
