@@ -4,6 +4,7 @@ import { VocabularyCard, VocabularyWord } from './VocabularyCard';
 import { Button } from '@/components/ui/button';
 import { FileDown, RotateCcw, GraduationCap } from 'lucide-react';
 import { FlashcardMode } from './FlashcardMode';
+import { TargetLanguage } from '@/lib/languages';
 
 interface VocabularyResultsProps {
   vocabulary: VocabularyWord[];
@@ -11,6 +12,7 @@ interface VocabularyResultsProps {
   onReset: () => void;
   onUpdateWord: (index: number, updated: VocabularyWord) => void;
   isGeneratingPdf: boolean;
+  language?: TargetLanguage;
 }
 
 export function VocabularyResults({
@@ -19,6 +21,7 @@ export function VocabularyResults({
   onReset,
   onUpdateWord,
   isGeneratingPdf,
+  language,
 }: VocabularyResultsProps) {
   const [isStudying, setIsStudying] = useState(false);
 
@@ -72,12 +75,13 @@ export function VocabularyResults({
             vocabulary={word}
             index={index}
             onUpdate={(updated) => onUpdateWord(index, updated)}
+            language={language}
           />
         ))}
       </div>
 
       {isStudying && (
-        <FlashcardMode vocabulary={vocabulary} onClose={() => setIsStudying(false)} />
+        <FlashcardMode vocabulary={vocabulary} onClose={() => setIsStudying(false)} language={language} />
       )}
     </motion.div>
   );

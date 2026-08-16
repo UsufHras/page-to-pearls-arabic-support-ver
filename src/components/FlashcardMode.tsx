@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, RotateCcw, Shuffle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { VocabularyWord, CefrLevel } from './VocabularyCard';
+import { VocabularyWord, CefrLevel, getWordTranslation } from './VocabularyCard';
+import { getLanguage, TargetLanguage } from '@/lib/languages';
 import { cn } from '@/lib/utils';
 
 const DIFFICULTY_STYLES: Record<CefrLevel, string> = {
@@ -17,9 +18,11 @@ const DIFFICULTY_STYLES: Record<CefrLevel, string> = {
 interface FlashcardModeProps {
   vocabulary: VocabularyWord[];
   onClose: () => void;
+  language?: TargetLanguage;
 }
 
-export function FlashcardMode({ vocabulary, onClose }: FlashcardModeProps) {
+export function FlashcardMode({ vocabulary, onClose, language }: FlashcardModeProps) {
+  const lang = language ?? getLanguage(undefined);
   const [order, setOrder] = useState<number[]>(() => vocabulary.map((_, i) => i));
   const [position, setPosition] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -133,9 +136,9 @@ export function FlashcardMode({ vocabulary, onClose }: FlashcardModeProps) {
                 <div className="space-y-5">
                   <div>
                     <h3 className="font-display text-2xl font-bold text-foreground">{word.word}</h3>
-                    {word.arabicTranslation && (
-                      <p dir="rtl" className="text-2xl text-primary mt-1">
-                        {word.arabicTranslation}
+                    {getWordTranslation(word) && (
+                      <p dir={lang.rtl ? 'rtl' : 'ltr'} className="text-2xl text-primary mt-1">
+                        {getWordTranslation(word)}
                       </p>
                     )}
                   </div>
