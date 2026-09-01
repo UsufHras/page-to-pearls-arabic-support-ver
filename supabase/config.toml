@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.pronounce-word]
 verify_jwt = false
+
+[functions.transcribe-page]
+verify_jwt = false
+
+[functions.lookup-word]
+verify_jwt = false
