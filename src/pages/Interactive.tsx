@@ -138,18 +138,30 @@ const Interactive = () => {
   };
 
   const handlePronounce = async () => {
-    if (!lookup) return;
+    if (!lookup || playing) return;
     setPlaying(true);
     try {
-      const { data, error } = await supabase.functions.invoke('pronounce-word', {
-        body: { word: lookup.word, accent: 'us' },
-      });
-      if (error) throw error;
-      const audio = new Audio(`data:audio/mpeg;base64,${data.audioContent}`);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pronounce-word`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ word: lookup.word, accent: 'us' }),
+        }
+      );
+      if (!response.ok) throw new Error('Failed to get pronunciation');
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.onended = () => { setPlaying(false); URL.revokeObjectURL(audioUrl); };
+      audio.onerror = () => { setPlaying(false); URL.revokeObjectURL(audioUrl); };
       await audio.play();
     } catch {
       toast({ title: 'Audio unavailable', variant: 'destructive' });
-    } finally {
       setPlaying(false);
     }
   };
