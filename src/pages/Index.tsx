@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Sparkles } from 'lucide-react';
+import { BookOpen, MousePointerClick, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { ImageUpload } from '@/components/ImageUpload';
 import { VocabularyResults } from '@/components/VocabularyResults';
 import { VocabularyWord } from '@/components/VocabularyCard';
@@ -120,7 +121,15 @@ const Index = () => {
                 <p className="text-xs text-muted-foreground">Vocabulary Extraction</p>
               </div>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" asChild className="gap-2">
+                <Link to="/interactive">
+                  <MousePointerClick className="w-4 h-4" />
+                  Interactive Reader
+                </Link>
+              </Button>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
