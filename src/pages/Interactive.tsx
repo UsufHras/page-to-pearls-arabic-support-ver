@@ -6,6 +6,7 @@ import {
   BookOpen,
   Check,
   GraduationCap,
+  Library as LibraryIcon,
   Loader2,
   Plus,
   Sparkles,
