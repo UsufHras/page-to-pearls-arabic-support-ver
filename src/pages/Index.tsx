@@ -128,6 +128,12 @@ const Index = () => {
                   Interactive Reader
                 </Link>
               </Button>
+              <Button variant="outline" size="sm" asChild className="gap-2">
+                <Link to="/library">
+                  <Library className="w-4 h-4" />
+                  Library
+                </Link>
+              </Button>
               <ThemeToggle />
             </div>
           </div>

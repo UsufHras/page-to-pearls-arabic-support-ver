@@ -185,6 +185,11 @@ const Interactive = () => {
                 <ArrowLeft className="w-4 h-4" /> Extractor
               </Link>
             </Button>
+            <Button asChild variant="outline" size="sm" className="gap-2">
+              <Link to="/library">
+                <LibraryIcon className="w-4 h-4" /> Library
+              </Link>
+            </Button>
             <ThemeToggle />
           </div>
         </div>
