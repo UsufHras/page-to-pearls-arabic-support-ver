@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { FileDown, RotateCcw, GraduationCap } from 'lucide-react';
 import { FlashcardMode } from './FlashcardMode';
 import { TargetLanguage } from '@/lib/languages';
+import { SaveToCourse } from './SaveToCourse';
 
 interface VocabularyResultsProps {
   vocabulary: VocabularyWord[];
@@ -42,7 +43,7 @@ export function VocabularyResults({
             {vocabulary.length} word{vocabulary.length !== 1 ? 's' : ''} found · tap the pencil to edit before export
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Button
             variant="outline"
             onClick={() => setIsStudying(true)}
@@ -52,6 +53,7 @@ export function VocabularyResults({
             <GraduationCap className="w-4 h-4" />
             Study
           </Button>
+          <SaveToCourse words={vocabulary} languageCode={language?.code} />
           <Button variant="outline" onClick={onReset} className="gap-2">
             <RotateCcw className="w-4 h-4" />
             New Page
