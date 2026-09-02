@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, MousePointerClick, Sparkles } from 'lucide-react';
+import { BookOpen, Library, MousePointerClick, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ImageUpload } from '@/components/ImageUpload';
 import { VocabularyResults } from '@/components/VocabularyResults';
@@ -126,6 +126,12 @@ const Index = () => {
                 <Link to="/interactive">
                   <MousePointerClick className="w-4 h-4" />
                   Interactive Reader
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild className="gap-2">
+                <Link to="/library">
+                  <Library className="w-4 h-4" />
+                  Library
                 </Link>
               </Button>
               <ThemeToggle />

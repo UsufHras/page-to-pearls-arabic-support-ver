@@ -6,6 +6,7 @@ import {
   BookOpen,
   Check,
   GraduationCap,
+  Library as LibraryIcon,
   Loader2,
   Plus,
   Sparkles,
@@ -21,6 +22,7 @@ import { FlashcardMode } from '@/components/FlashcardMode';
 import { VocabularyWord, CefrLevel, getWordTranslation } from '@/components/VocabularyCard';
 import { getLanguage, loadStoredLanguageCode, LANGUAGE_STORAGE_KEY } from '@/lib/languages';
 import { addToDeck, loadDeck, removeFromDeck } from '@/lib/flashcardDeck';
+import { SaveToCourse } from '@/components/SaveToCourse';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -183,6 +185,11 @@ const Interactive = () => {
             <Button asChild variant="ghost" size="sm" className="gap-2">
               <Link to="/">
                 <ArrowLeft className="w-4 h-4" /> Extractor
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="gap-2">
+              <Link to="/library">
+                <LibraryIcon className="w-4 h-4" /> Library
               </Link>
             </Button>
             <ThemeToggle />
@@ -382,9 +389,17 @@ const Interactive = () => {
                     My deck ({deck.length})
                   </h4>
                   {deck.length > 0 && (
-                    <Button size="sm" className="gap-2" onClick={() => setIsStudying(true)}>
-                      <GraduationCap className="w-4 h-4" /> Study
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <SaveToCourse
+                        words={deck}
+                        languageCode={language.code}
+                        size="sm"
+                        label="Save"
+                      />
+                      <Button size="sm" className="gap-2" onClick={() => setIsStudying(true)}>
+                        <GraduationCap className="w-4 h-4" /> Study
+                      </Button>
+                    </div>
                   )}
                 </div>
                 {deck.length === 0 ? (
