@@ -1,19 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
   BookOpen,
+  Brain,
   GraduationCap,
   Library as LibraryIcon,
   Pencil,
   Plus,
+  RotateCcw,
   Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { FlashcardMode } from '@/components/FlashcardMode';
+import { ReviewMode } from '@/components/ReviewMode';
 import { VocabularyCard, VocabularyWord } from '@/components/VocabularyCard';
 import {
   Course,
@@ -23,6 +26,15 @@ import {
   removeWordFromCourse,
   updateCourse,
 } from '@/lib/library';
+import {
+  courseProgress,
+  dueWords,
+  formatDueLabel,
+  getReviewState,
+  masteryOf,
+  resetCourseProgress,
+  resetWordProgress,
+} from '@/lib/spacedRepetition';
 import { getLanguage, loadStoredLanguageCode } from '@/lib/languages';
 import { useToast } from '@/hooks/use-toast';
 
@@ -34,13 +46,28 @@ const Library = () => {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [isStudying, setIsStudying] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [srsTick, setSrsTick] = useState(0);
+  const refreshSrs = useCallback(() => setSrsTick((t) => t + 1), []);
 
   const language = useMemo(() => getLanguage(loadStoredLanguageCode()), []);
   const selected = courses.find((c) => c.id === selectedId) ?? null;
 
+  const progress = useMemo(
+    () => (selected ? courseProgress(selected.id, selected.words) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selected, srsTick],
+  );
+  const due = useMemo(
+    () => (selected ? dueWords(selected.id, selected.words) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selected, srsTick],
+  );
+
   useEffect(() => {
     document.title = 'Vocabulary Library — Lexicon';
   }, []);
+
 
   const handleCreate = () => {
     if (!newName.trim()) return;
