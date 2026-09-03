@@ -1,81 +1,41 @@
-import { VocabularyWord } from '@/components/VocabularyCard';
-
-export const SRS_STORAGE_KEY = 'lexicon-srs-schedule';
-
 export type Grade = 'again' | 'hard' | 'good' | 'easy';
 
 export interface ReviewState {
-  /** number of consecutive successful reviews */
+  /** consecutive successful reviews */
   streak: number;
   /** current interval in days */
   intervalDays: number;
   /** ease factor, 1.3 - 3.0 */
   ease: number;
-  /** ISO date of next due review */
-  dueAt: string;
-  lastReviewedAt?: string;
+  /** ISO date of next due review (null = never reviewed) */
+  dueAt: string | null;
+  lastReviewedAt: string | null;
   reviews: number;
   lapses: number;
 }
 
-type Schedule = Record<string, ReviewState>;
+export const NEW_REVIEW_STATE: ReviewState = {
+  streak: 0,
+  intervalDays: 0,
+  ease: 2.5,
+  dueAt: null,
+  lastReviewedAt: null,
+  reviews: 0,
+  lapses: 0,
+};
 
 export const MASTERY_STEPS = ['New', 'Learning', 'Familiar', 'Known', 'Mastered'] as const;
 export type Mastery = (typeof MASTERY_STEPS)[number];
 
-export function srsKey(courseId: string, word: string) {
-  return `${courseId}::${word.toLowerCase()}`;
-}
-
-function loadSchedule(): Schedule {
-  try {
-    const raw = localStorage.getItem(SRS_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return parsed && typeof parsed === 'object' ? (parsed as Schedule) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveSchedule(schedule: Schedule) {
-  try {
-    localStorage.setItem(SRS_STORAGE_KEY, JSON.stringify(schedule));
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export function getReviewState(courseId: string, word: string): ReviewState | undefined {
-  return loadSchedule()[srsKey(courseId, word)];
-}
-
-export function getCourseSchedule(courseId: string): Schedule {
-  const all = loadSchedule();
-  const prefix = `${courseId}::`;
-  return Object.fromEntries(Object.entries(all).filter(([k]) => k.startsWith(prefix)));
-}
-
-function addDays(days: number) {
+function startOfDayInDays(days: number) {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  // due at start of that day so reviews unlock in the morning
   d.setHours(0, 0, 0, 0);
   return d.toISOString();
 }
 
-/** SM-2 inspired scheduling with four grades. */
-export function gradeWord(courseId: string, word: string, grade: Grade): ReviewState {
-  const all = loadSchedule();
-  const key = srsKey(courseId, word);
-  const prev: ReviewState = all[key] ?? {
-    streak: 0,
-    intervalDays: 0,
-    ease: 2.5,
-    dueAt: new Date().toISOString(),
-    reviews: 0,
-    lapses: 0,
-  };
-
+/** SM-2 inspired scheduling with four grades. Pure — persistence is the caller's job. */
+export function computeNextReview(prev: ReviewState, grade: Grade): ReviewState {
   let { streak, intervalDays, ease, lapses } = prev;
 
   if (grade === 'again') {
@@ -87,7 +47,7 @@ export function gradeWord(courseId: string, word: string, grade: Grade): ReviewS
     const easeDelta = grade === 'hard' ? -0.15 : grade === 'easy' ? 0.15 : 0;
     ease = Math.min(3, Math.max(1.3, ease + easeDelta));
     streak += 1;
-    if (streak === 1) intervalDays = grade === 'hard' ? 1 : grade === 'easy' ? 3 : 1;
+    if (streak === 1) intervalDays = grade === 'easy' ? 3 : 1;
     else if (streak === 2) intervalDays = grade === 'hard' ? 3 : grade === 'easy' ? 8 : 6;
     else {
       const mult = grade === 'hard' ? 1.2 : grade === 'easy' ? ease * 1.3 : ease;
@@ -96,36 +56,19 @@ export function gradeWord(courseId: string, word: string, grade: Grade): ReviewS
     intervalDays = Math.min(intervalDays, 365);
   }
 
-  const next: ReviewState = {
+  return {
     streak,
     intervalDays,
     ease,
     lapses,
     reviews: prev.reviews + 1,
     lastReviewedAt: new Date().toISOString(),
-    dueAt: intervalDays === 0 ? new Date().toISOString() : addDays(intervalDays),
+    dueAt: intervalDays === 0 ? new Date().toISOString() : startOfDayInDays(intervalDays),
   };
-
-  all[key] = next;
-  saveSchedule(all);
-  return next;
-}
-
-export function resetWordProgress(courseId: string, word: string) {
-  const all = loadSchedule();
-  delete all[srsKey(courseId, word)];
-  saveSchedule(all);
-}
-
-export function resetCourseProgress(courseId: string) {
-  const all = loadSchedule();
-  const prefix = `${courseId}::`;
-  for (const k of Object.keys(all)) if (k.startsWith(prefix)) delete all[k];
-  saveSchedule(all);
 }
 
 export function isDue(state: ReviewState | undefined, now = new Date()) {
-  if (!state) return true; // new words are always due
+  if (!state || !state.dueAt) return true; // never reviewed → always due
   return new Date(state.dueAt).getTime() <= now.getTime();
 }
 
@@ -138,6 +81,17 @@ export function masteryOf(state: ReviewState | undefined): Mastery {
   return 'Learning';
 }
 
+export function formatDueLabel(state: ReviewState | undefined): string {
+  if (!state || !state.dueAt) return 'New';
+  const ms = new Date(state.dueAt).getTime() - Date.now();
+  if (ms <= 0) return 'Due now';
+  const days = Math.ceil(ms / 86_400_000);
+  if (days <= 1) return 'Due tomorrow';
+  if (days < 30) return `Due in ${days} days`;
+  const months = Math.round(days / 30);
+  return `Due in ${months} month${months !== 1 ? 's' : ''}`;
+}
+
 export interface CourseProgress {
   total: number;
   due: number;
@@ -146,8 +100,7 @@ export interface CourseProgress {
   nextDueAt?: string;
 }
 
-export function courseProgress(courseId: string, words: VocabularyWord[]): CourseProgress {
-  const schedule = getCourseSchedule(courseId);
+export function summariseProgress(items: { review: ReviewState }[]): CourseProgress {
   const byMastery: Record<Mastery, number> = {
     New: 0,
     Learning: 0,
@@ -159,19 +112,19 @@ export function courseProgress(courseId: string, words: VocabularyWord[]): Cours
   let newCount = 0;
   let nextDue: number | undefined;
 
-  for (const w of words) {
-    const state = schedule[srsKey(courseId, w.word)];
+  for (const item of items) {
+    const state = item.review;
     byMastery[masteryOf(state)] += 1;
-    if (!state) newCount += 1;
+    if (state.reviews === 0) newCount += 1;
     if (isDue(state)) due += 1;
-    else if (state) {
+    else if (state.dueAt) {
       const t = new Date(state.dueAt).getTime();
       if (nextDue === undefined || t < nextDue) nextDue = t;
     }
   }
 
   return {
-    total: words.length,
+    total: items.length,
     due,
     newCount,
     byMastery,
@@ -179,27 +132,12 @@ export function courseProgress(courseId: string, words: VocabularyWord[]): Cours
   };
 }
 
-export function dueWords(courseId: string, words: VocabularyWord[]): VocabularyWord[] {
-  const schedule = getCourseSchedule(courseId);
-  return words
-    .filter((w) => isDue(schedule[srsKey(courseId, w.word)]))
+export function selectDue<T extends { review: ReviewState }>(items: T[]): T[] {
+  return items
+    .filter((i) => isDue(i.review))
     .sort((a, b) => {
-      const sa = schedule[srsKey(courseId, a.word)];
-      const sb = schedule[srsKey(courseId, b.word)];
-      // overdue-most first, new words after lapsed ones
-      const ta = sa ? new Date(sa.dueAt).getTime() : Number.MAX_SAFE_INTEGER;
-      const tb = sb ? new Date(sb.dueAt).getTime() : Number.MAX_SAFE_INTEGER;
+      const ta = a.review.dueAt ? new Date(a.review.dueAt).getTime() : Number.MAX_SAFE_INTEGER;
+      const tb = b.review.dueAt ? new Date(b.review.dueAt).getTime() : Number.MAX_SAFE_INTEGER;
       return ta - tb;
     });
-}
-
-export function formatDueLabel(state: ReviewState | undefined): string {
-  if (!state) return 'New';
-  const ms = new Date(state.dueAt).getTime() - Date.now();
-  if (ms <= 0) return 'Due now';
-  const days = Math.ceil(ms / 86_400_000);
-  if (days <= 1) return 'Due tomorrow';
-  if (days < 30) return `Due in ${days} days`;
-  const months = Math.round(days / 30);
-  return `Due in ${months} month${months !== 1 ? 's' : ''}`;
 }
