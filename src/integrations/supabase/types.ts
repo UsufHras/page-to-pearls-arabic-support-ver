@@ -14,7 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      course_words: {
+        Row: {
+          antonyms: string[]
+          collocations: string[]
+          course_id: string
+          created_at: string
+          definition: string
+          difficulty: string | null
+          due_at: string | null
+          ease: number
+          examples: string[]
+          id: string
+          interval_days: number
+          lapses: number
+          last_reviewed_at: string | null
+          position: number
+          pronunciation: string | null
+          reviews: number
+          streak: number
+          synonyms: string[]
+          translation: string | null
+          updated_at: string
+          user_id: string
+          word: string
+        }
+        Insert: {
+          antonyms?: string[]
+          collocations?: string[]
+          course_id: string
+          created_at?: string
+          definition?: string
+          difficulty?: string | null
+          due_at?: string | null
+          ease?: number
+          examples?: string[]
+          id?: string
+          interval_days?: number
+          lapses?: number
+          last_reviewed_at?: string | null
+          position?: number
+          pronunciation?: string | null
+          reviews?: number
+          streak?: number
+          synonyms?: string[]
+          translation?: string | null
+          updated_at?: string
+          user_id: string
+          word: string
+        }
+        Update: {
+          antonyms?: string[]
+          collocations?: string[]
+          course_id?: string
+          created_at?: string
+          definition?: string
+          difficulty?: string | null
+          due_at?: string | null
+          ease?: number
+          examples?: string[]
+          id?: string
+          interval_days?: number
+          lapses?: number
+          last_reviewed_at?: string | null
+          position?: number
+          pronunciation?: string | null
+          reviews?: number
+          streak?: number
+          synonyms?: string[]
+          translation?: string | null
+          updated_at?: string
+          user_id?: string
+          word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_words_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          language_code: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          language_code?: string | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          language_code?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
