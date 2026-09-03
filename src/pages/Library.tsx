@@ -243,15 +243,84 @@ const Library = () => {
                       {selected.words.length} word{selected.words.length !== 1 ? 's' : ''} saved
                     </p>
                   </div>
-                  <Button
-                    className="gap-2"
-                    disabled={selected.words.length === 0}
-                    onClick={() => setIsStudying(true)}
-                  >
-                    <GraduationCap className="w-4 h-4" />
-                    Study course
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      className="gap-2"
+                      disabled={due.length === 0}
+                      onClick={() => setIsReviewing(true)}
+                    >
+                      <Brain className="w-4 h-4" />
+                      Review {due.length > 0 ? `(${due.length} due)` : 'up to date'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      disabled={selected.words.length === 0}
+                      onClick={() => setIsStudying(true)}
+                    >
+                      <GraduationCap className="w-4 h-4" />
+                      Browse flashcards
+                    </Button>
+                  </div>
                 </div>
+
+                {progress && selected.words.length > 0 && (
+                  <div className="card-paper p-5 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-display font-semibold text-foreground">
+                          Spaced repetition
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {progress.due > 0
+                            ? `${progress.due} word${progress.due !== 1 ? 's' : ''} ready to review (${progress.newCount} new)`
+                            : progress.nextDueAt
+                              ? `Nothing due — next review ${new Date(progress.nextDueAt).toLocaleDateString()}`
+                              : 'Nothing due right now'}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2 text-muted-foreground"
+                        onClick={() => {
+                          resetCourseProgress(selected.id);
+                          refreshSrs();
+                          toast({ title: 'Schedule reset', description: 'All words are due again.' });
+                        }}
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        Reset progress
+                      </Button>
+                    </div>
+                    <div className="flex h-2 rounded-full overflow-hidden bg-muted">
+                      {(
+                        [
+                          ['Mastered', 'bg-primary'],
+                          ['Known', 'bg-emerald-500'],
+                          ['Familiar', 'bg-amber-500'],
+                          ['Learning', 'bg-orange-500'],
+                          ['New', 'bg-muted-foreground/30'],
+                        ] as const
+                      ).map(([key, color]) => (
+                        <div
+                          key={key}
+                          className={color}
+                          style={{
+                            width: `${(progress.byMastery[key] / Math.max(1, progress.total)) * 100}%`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      {(['New', 'Learning', 'Familiar', 'Known', 'Mastered'] as const).map((k) => (
+                        <span key={k}>
+                          {k}: <span className="text-foreground font-medium">{progress.byMastery[k]}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {selected.words.length === 0 ? (
                   <div className="card-paper p-8 text-center text-sm text-muted-foreground">
@@ -260,24 +329,32 @@ const Library = () => {
                   </div>
                 ) : (
                   <div className="grid gap-6 md:grid-cols-2">
-                    {selected.words.map((word, index) => (
-                      <div key={`${word.word}-${index}`} className="relative">
-                        <VocabularyCard
-                          vocabulary={word}
-                          index={index}
-                          language={language}
-                          onUpdate={(updated) => handleUpdateWord(selected, index, updated)}
-                        />
-                        <button
-                          type="button"
-                          className="absolute top-3 right-3 p-1.5 rounded-md text-muted-foreground hover:text-destructive bg-card/80"
-                          aria-label={`Remove ${word.word}`}
-                          onClick={() => handleRemoveWord(selected, word)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                    {selected.words.map((word, index) => {
+                      const state = getReviewState(selected.id, word.word);
+                      return (
+                        <div key={`${word.word}-${index}`} className="relative">
+                          <VocabularyCard
+                            vocabulary={word}
+                            index={index}
+                            language={language}
+                            onUpdate={(updated) => handleUpdateWord(selected, index, updated)}
+                          />
+                          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full border border-border bg-card/90 text-muted-foreground">
+                              {masteryOf(state)} · {formatDueLabel(state)}
+                            </span>
+                            <button
+                              type="button"
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-destructive bg-card/80"
+                              aria-label={`Remove ${word.word}`}
+                              onClick={() => handleRemoveWord(selected, word)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -293,6 +370,21 @@ const Library = () => {
           onClose={() => setIsStudying(false)}
         />
       )}
+
+      {isReviewing && selected && due.length > 0 && (
+        <ReviewMode
+          courseId={selected.id}
+          courseName={selected.name}
+          words={due}
+          language={language}
+          onGraded={refreshSrs}
+          onClose={() => {
+            setIsReviewing(false);
+            refreshSrs();
+          }}
+        />
+      )}
+
     </div>
   );
 };
