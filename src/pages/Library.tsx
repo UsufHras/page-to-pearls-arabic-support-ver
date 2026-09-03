@@ -78,6 +78,7 @@ const Library = () => {
   };
 
   const handleDelete = (course: Course) => {
+    resetCourseProgress(course.id);
     setCourses(deleteCourse(course.id));
     if (selectedId === course.id) setSelectedId(null);
     toast({ title: 'Course deleted', description: `“${course.name}” was removed.` });
@@ -92,8 +93,11 @@ const Library = () => {
   };
 
   const handleRemoveWord = (course: Course, word: VocabularyWord) => {
+    resetWordProgress(course.id, word.word);
     setCourses(removeWordFromCourse(course.id, word.word));
+    refreshSrs();
   };
+
 
   const handleUpdateWord = (course: Course, index: number, updated: VocabularyWord) => {
     const words = course.words.map((w, i) => (i === index ? updated : w));
