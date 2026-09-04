@@ -2,15 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { VocabularyWord, CefrLevel, getWordTranslation } from './VocabularyCard';
+import { CefrLevel, getWordTranslation } from './VocabularyCard';
 import { getLanguage, TargetLanguage } from '@/lib/languages';
-import {
-  Grade,
-  formatDueLabel,
-  getReviewState,
-  gradeWord,
-  masteryOf,
-} from '@/lib/spacedRepetition';
+import { LibraryWord } from '@/lib/library';
+import { Grade, formatDueLabel, masteryOf } from '@/lib/spacedRepetition';
 import { cn } from '@/lib/utils';
 
 const DIFFICULTY_STYLES: Record<CefrLevel, string> = {
@@ -41,7 +36,8 @@ const GRADES: { grade: Grade; label: string; hint: string; className: string; ke
     grade: 'good',
     label: 'Good',
     hint: 'Recalled it',
-    className: 'border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10',
+    className:
+      'border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10',
     key: '3',
   },
   {
@@ -54,36 +50,27 @@ const GRADES: { grade: Grade; label: string; hint: string; className: string; ke
 ];
 
 interface ReviewModeProps {
-  courseId: string;
   courseName: string;
-  words: VocabularyWord[];
+  words: LibraryWord[];
   onClose: () => void;
-  /** Called after each graded card so the parent can refresh progress. */
-  onGraded?: () => void;
+  /** Persists the grade; resolves once saved. */
+  onGrade: (word: LibraryWord, grade: Grade) => Promise<void> | void;
   language?: TargetLanguage;
 }
 
-export function ReviewMode({
-  courseId,
-  courseName,
-  words,
-  onClose,
-  onGraded,
-  language,
-}: ReviewModeProps) {
+export function ReviewMode({ courseName, words, onClose, onGrade, language }: ReviewModeProps) {
   const lang = language ?? getLanguage(undefined);
-  const [queue, setQueue] = useState<VocabularyWord[]>(() => words);
+  const [queue, setQueue] = useState<LibraryWord[]>(() => words);
   const [revealed, setRevealed] = useState(false);
   const [done, setDone] = useState(0);
   const total = useMemo(() => words.length, [words]);
 
   const word = queue[0];
-  const state = word ? getReviewState(courseId, word.word) : undefined;
+  const state = word?.review;
 
   const handleGrade = (grade: Grade) => {
     if (!word) return;
-    gradeWord(courseId, word.word, grade);
-    onGraded?.();
+    void onGrade(word, grade);
     setRevealed(false);
     setQueue((q) => (grade === 'again' ? [...q.slice(1), q[0]] : q.slice(1)));
     if (grade !== 'again') setDone((d) => d + 1);
@@ -144,7 +131,7 @@ export function ReviewMode({
           <div className="w-full max-w-2xl">
             <AnimatePresence mode="wait">
               <motion.div
-                key={`${word.word}-${revealed}`}
+                key={`${word.id}-${revealed}`}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
