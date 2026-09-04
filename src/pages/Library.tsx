@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   BookOpen,
   Brain,
+  CloudUpload,
   GraduationCap,
   Library as LibraryIcon,
+  Loader2,
+  LogOut,
   Pencil,
   Plus,
   RotateCcw,
@@ -20,89 +23,166 @@ import { ReviewMode } from '@/components/ReviewMode';
 import { VocabularyCard, VocabularyWord } from '@/components/VocabularyCard';
 import {
   Course,
+  LibraryWord,
   createCourse,
   deleteCourse,
-  loadCourses,
-  removeWordFromCourse,
-  updateCourse,
+  fetchCourses,
+  gradeWord,
+  hasLegacyLocalLibrary,
+  importLegacyLocalLibrary,
+  removeWord,
+  renameCourse,
+  resetCourseProgress,
+  updateWord,
 } from '@/lib/library';
 import {
-  courseProgress,
-  dueWords,
+  Grade,
   formatDueLabel,
-  getReviewState,
   masteryOf,
-  resetCourseProgress,
-  resetWordProgress,
+  selectDue,
+  summariseProgress,
 } from '@/lib/spacedRepetition';
 import { getLanguage, loadStoredLanguageCode } from '@/lib/languages';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 const Library = () => {
   const { toast } = useToast();
-  const [courses, setCourses] = useState<Course[]>(() => loadCourses());
+  const navigate = useNavigate();
+  const { session, loading: authLoading, signOut } = useAuth();
+
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [isStudying, setIsStudying] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
-  const [srsTick, setSrsTick] = useState(0);
-  const refreshSrs = useCallback(() => setSrsTick((t) => t + 1), []);
+  const [importing, setImporting] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const language = useMemo(() => getLanguage(loadStoredLanguageCode()), []);
   const selected = courses.find((c) => c.id === selectedId) ?? null;
-
-  const progress = useMemo(
-    () => (selected ? courseProgress(selected.id, selected.words) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selected, srsTick],
-  );
-  const due = useMemo(
-    () => (selected ? dueWords(selected.id, selected.words) : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selected, srsTick],
-  );
+  const progress = selected ? summariseProgress(selected.words) : null;
+  const due = selected ? selectDue(selected.words) : [];
 
   useEffect(() => {
     document.title = 'Vocabulary Library — Lexicon';
   }, []);
 
+  useEffect(() => {
+    if (!authLoading && !session) navigate('/auth', { replace: true });
+  }, [authLoading, session, navigate]);
 
-  const handleCreate = () => {
+  const reload = useCallback(async () => {
+    try {
+      setCourses(await fetchCourses());
+    } catch (err) {
+      toast({
+        title: 'Could not load your library',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (!session) return;
+    setShowImport(hasLegacyLocalLibrary());
+    void reload();
+  }, [session, reload]);
+
+  const run = async (action: () => Promise<unknown>, errorTitle: string) => {
+    try {
+      await action();
+      await reload();
+    } catch (err) {
+      toast({
+        title: errorTitle,
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCreate = async () => {
     if (!newName.trim()) return;
-    const course = createCourse(newName, { languageCode: language.code });
-    setCourses(loadCourses());
-    setSelectedId(course.id);
+    const name = newName.trim();
     setNewName('');
+    try {
+      const course = await createCourse(name, { languageCode: language.code });
+      setSelectedId(course.id);
+      await reload();
+    } catch (err) {
+      toast({
+        title: 'Could not create course',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleDelete = (course: Course) => {
-    resetCourseProgress(course.id);
-    setCourses(deleteCourse(course.id));
-    if (selectedId === course.id) setSelectedId(null);
-    toast({ title: 'Course deleted', description: `“${course.name}” was removed.` });
-  };
+  const handleDelete = (course: Course) =>
+    run(async () => {
+      await deleteCourse(course.id);
+      if (selectedId === course.id) setSelectedId(null);
+      toast({ title: 'Course deleted', description: `“${course.name}” was removed.` });
+    }, 'Could not delete course');
 
   const commitRename = () => {
-    if (renamingId && renameValue.trim()) {
-      setCourses(updateCourse(renamingId, { name: renameValue.trim() }));
-    }
+    const id = renamingId;
+    const value = renameValue.trim();
     setRenamingId(null);
     setRenameValue('');
+    if (id && value) void run(() => renameCourse(id, value), 'Could not rename course');
   };
 
-  const handleRemoveWord = (course: Course, word: VocabularyWord) => {
-    resetWordProgress(course.id, word.word);
-    setCourses(removeWordFromCourse(course.id, word.word));
-    refreshSrs();
+  const handleGrade = async (word: LibraryWord, grade: Grade) => {
+    try {
+      const next = await gradeWord(word.id, word.review, grade);
+      setCourses((prev) =>
+        prev.map((c) => ({
+          ...c,
+          words: c.words.map((w) => (w.id === word.id ? { ...w, review: next } : w)),
+        })),
+      );
+    } catch (err) {
+      toast({
+        title: 'Could not save your review',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
+  const handleImport = () =>
+    run(async () => {
+      setImporting(true);
+      try {
+        const count = await importLegacyLocalLibrary();
+        setShowImport(false);
+        toast({
+          title: count > 0 ? 'Library imported' : 'Nothing to import',
+          description:
+            count > 0
+              ? `${count} course${count !== 1 ? 's' : ''} moved from this browser to your account.`
+              : 'No browser-only courses were found.',
+        });
+      } finally {
+        setImporting(false);
+      }
+    }, 'Could not import your old library');
 
-  const handleUpdateWord = (course: Course, index: number, updated: VocabularyWord) => {
-    const words = course.words.map((w, i) => (i === index ? updated : w));
-    setCourses(updateCourse(course.id, { words }));
-  };
+  if (authLoading || (session && loading)) {
+    return (
+      <div className="min-h-screen bg-gradient-paper flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-paper">
@@ -114,7 +194,9 @@ const Library = () => {
             </div>
             <div>
               <h1 className="text-xl font-display font-bold text-foreground">My Library</h1>
-              <p className="text-xs text-muted-foreground">Courses &amp; saved flashcards</p>
+              <p className="text-xs text-muted-foreground truncate max-w-[14rem]">
+                {session?.user.email ?? 'Synced to your account'}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -124,12 +206,45 @@ const Library = () => {
                 Extractor
               </Link>
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              onClick={async () => {
+                await signOut();
+                navigate('/auth', { replace: true });
+              }}
+            >
+              <LogOut className="w-4 h-4" />
+              Sign out
+            </Button>
             <ThemeToggle />
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-10">
+        {showImport && (
+          <div className="card-paper p-5 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display font-semibold text-foreground">
+                Courses found in this browser
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Move them into your account so they survive a browser reset.
+              </p>
+            </div>
+            <Button onClick={handleImport} disabled={importing} className="gap-2">
+              {importing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CloudUpload className="w-4 h-4" />
+              )}
+              Import to my account
+            </Button>
+          </div>
+        )}
+
         <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
           {/* Courses list */}
           <aside className="space-y-4">
@@ -141,10 +256,15 @@ const Library = () => {
                   placeholder="Course name"
                   onChange={(e) => setNewName(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreate();
+                    if (e.key === 'Enter') void handleCreate();
                   }}
                 />
-                <Button onClick={handleCreate} disabled={!newName.trim()} size="icon" aria-label="Create course">
+                <Button
+                  onClick={() => void handleCreate()}
+                  disabled={!newName.trim()}
+                  size="icon"
+                  aria-label="Create course"
+                >
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
@@ -157,65 +277,70 @@ const Library = () => {
                   interactive reader.
                 </p>
               ) : (
-                courses.map((course) => (
-                  <motion.div
-                    key={course.id}
-                    layout
-                    className={`card-paper p-4 cursor-pointer transition-colors ${
-                      selectedId === course.id ? 'border-primary' : ''
-                    }`}
-                    onClick={() => setSelectedId(course.id)}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      {renamingId === course.id ? (
-                        <Input
-                          autoFocus
-                          value={renameValue}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => setRenameValue(e.target.value)}
-                          onBlur={commitRename}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') commitRename();
-                            if (e.key === 'Escape') setRenamingId(null);
-                          }}
-                        />
-                      ) : (
-                        <div className="min-w-0">
-                          <p className="font-medium text-foreground truncate">{course.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {course.words.length} word{course.words.length !== 1 ? 's' : ''} ·{' '}
-                            {new Date(course.updatedAt).toLocaleDateString()}
-                          </p>
+                courses.map((course) => {
+                  const courseDue = selectDue(course.words).length;
+                  return (
+                    <motion.div
+                      key={course.id}
+                      layout
+                      className={`card-paper p-4 cursor-pointer transition-colors ${
+                        selectedId === course.id ? 'border-primary' : ''
+                      }`}
+                      onClick={() => setSelectedId(course.id)}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        {renamingId === course.id ? (
+                          <Input
+                            autoFocus
+                            value={renameValue}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onBlur={commitRename}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') commitRename();
+                              if (e.key === 'Escape') setRenamingId(null);
+                            }}
+                          />
+                        ) : (
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground truncate">{course.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {course.words.length} word{course.words.length !== 1 ? 's' : ''}
+                              {courseDue > 0 && (
+                                <span className="text-primary font-medium"> · {courseDue} due</span>
+                              )}
+                            </p>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            className="p-1.5 text-muted-foreground hover:text-primary"
+                            aria-label={`Rename ${course.name}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRenamingId(course.id);
+                              setRenameValue(course.name);
+                            }}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            className="p-1.5 text-muted-foreground hover:text-destructive"
+                            aria-label={`Delete ${course.name}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void handleDelete(course);
+                            }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                      )}
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          className="p-1.5 text-muted-foreground hover:text-primary"
-                          aria-label={`Rename ${course.name}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setRenamingId(course.id);
-                            setRenameValue(course.name);
-                          }}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          className="p-1.5 text-muted-foreground hover:text-destructive"
-                          aria-label={`Delete ${course.name}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(course);
-                          }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
                       </div>
-                    </div>
-                  </motion.div>
-                ))
+                    </motion.div>
+                  );
+                })
               )}
             </div>
           </aside>
@@ -283,11 +408,15 @@ const Library = () => {
                         variant="ghost"
                         size="sm"
                         className="gap-2 text-muted-foreground"
-                        onClick={() => {
-                          resetCourseProgress(selected.id);
-                          refreshSrs();
-                          toast({ title: 'Schedule reset', description: 'All words are due again.' });
-                        }}
+                        onClick={() =>
+                          void run(async () => {
+                            await resetCourseProgress(selected.id);
+                            toast({
+                              title: 'Schedule reset',
+                              description: 'All words are due again.',
+                            });
+                          }, 'Could not reset progress')
+                        }
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         Reset progress
@@ -315,7 +444,10 @@ const Library = () => {
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       {(['New', 'Learning', 'Familiar', 'Known', 'Mastered'] as const).map((k) => (
                         <span key={k}>
-                          {k}: <span className="text-foreground font-medium">{progress.byMastery[k]}</span>
+                          {k}:{' '}
+                          <span className="text-foreground font-medium">
+                            {progress.byMastery[k]}
+                          </span>
                         </span>
                       ))}
                     </div>
@@ -329,32 +461,36 @@ const Library = () => {
                   </div>
                 ) : (
                   <div className="grid gap-6 md:grid-cols-2">
-                    {selected.words.map((word, index) => {
-                      const state = getReviewState(selected.id, word.word);
-                      return (
-                        <div key={`${word.word}-${index}`} className="relative">
-                          <VocabularyCard
-                            vocabulary={word}
-                            index={index}
-                            language={language}
-                            onUpdate={(updated) => handleUpdateWord(selected, index, updated)}
-                          />
-                          <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full border border-border bg-card/90 text-muted-foreground">
-                              {masteryOf(state)} · {formatDueLabel(state)}
-                            </span>
-                            <button
-                              type="button"
-                              className="p-1.5 rounded-md text-muted-foreground hover:text-destructive bg-card/80"
-                              aria-label={`Remove ${word.word}`}
-                              onClick={() => handleRemoveWord(selected, word)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                    {selected.words.map((word, index) => (
+                      <div key={word.id} className="relative">
+                        <VocabularyCard
+                          vocabulary={word}
+                          index={index}
+                          language={language}
+                          onUpdate={(updated: VocabularyWord) =>
+                            void run(
+                              () => updateWord(word.id, updated),
+                              'Could not save your edit',
+                            )
+                          }
+                        />
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full border border-border bg-card/90 text-muted-foreground">
+                            {masteryOf(word.review)} · {formatDueLabel(word.review)}
+                          </span>
+                          <button
+                            type="button"
+                            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive bg-card/80"
+                            aria-label={`Remove ${word.word}`}
+                            onClick={() =>
+                              void run(() => removeWord(word.id), 'Could not remove word')
+                            }
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -373,18 +509,13 @@ const Library = () => {
 
       {isReviewing && selected && due.length > 0 && (
         <ReviewMode
-          courseId={selected.id}
           courseName={selected.name}
           words={due}
           language={language}
-          onGraded={refreshSrs}
-          onClose={() => {
-            setIsReviewing(false);
-            refreshSrs();
-          }}
+          onGrade={handleGrade}
+          onClose={() => setIsReviewing(false)}
         />
       )}
-
     </div>
   );
 };
