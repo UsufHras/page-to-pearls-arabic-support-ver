@@ -171,25 +171,25 @@ const Interactive = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <BookOpen className="w-6 h-6 text-primary" />
+        <div className="container max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             </div>
-            <div>
-              <h1 className="text-xl font-display font-bold text-foreground">Interactive Page</h1>
-              <p className="text-xs text-muted-foreground">Tap any word to learn it</p>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-display font-bold text-foreground truncate">Interactive Page</h1>
+              <p className="hidden sm:block text-xs text-muted-foreground">Tap any word to learn it</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm" className="gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <Button asChild variant="ghost" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
               <Link to="/">
-                <ArrowLeft className="w-4 h-4" /> Extractor
+                <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Extractor</span>
               </Link>
             </Button>
-            <Button asChild variant="outline" size="sm" className="gap-2">
+            <Button asChild variant="outline" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
               <Link to="/library">
-                <LibraryIcon className="w-4 h-4" /> Library
+                <LibraryIcon className="w-4 h-4" /> <span className="hidden sm:inline">Library</span>
               </Link>
             </Button>
             <ThemeToggle />
@@ -197,24 +197,24 @@ const Interactive = () => {
         </div>
       </header>
 
-      <main className="container max-w-5xl mx-auto px-4 py-8 space-y-8">
+      <main className="container max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         {!pageText ? (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto space-y-6"
+            className="max-w-2xl mx-auto space-y-4 sm:space-y-6"
           >
-            <div className="text-center space-y-3">
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
+            <div className="text-center space-y-2 sm:space-y-3 px-1">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">
                 Read any page, <span className="text-primary">interactively</span>
               </h2>
-              <p className="text-muted-foreground">
-                Upload a page and it becomes live text — click a word for its meaning, translation and
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Upload a page and it becomes live text — tap a word for its meaning, translation and
                 examples, then add it to your flashcard deck.
               </p>
             </div>
 
-            <div className="card-paper p-5">
+            <div className="card-paper p-4 sm:p-5">
               <LanguageSelect value={languageCode} onChange={setLanguageCode} disabled={isReading} />
             </div>
 
@@ -226,7 +226,7 @@ const Interactive = () => {
 
             {images.length > 0 && (
               <div className="flex justify-center">
-                <Button size="lg" className="gap-2 px-8" onClick={handleRead} disabled={isReading}>
+                <Button size="lg" className="gap-2 px-6 sm:px-8 w-full sm:w-auto" onClick={handleRead} disabled={isReading}>
                   {isReading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" /> Reading page…
@@ -241,10 +241,10 @@ const Interactive = () => {
             )}
           </motion.div>
         ) : (
-          <div className="grid lg:grid-cols-[1fr_20rem] gap-6 items-start">
-            <div className="card-paper p-6 md:p-8">
-              <div className="flex items-center justify-between mb-5">
-                <p className="text-sm text-muted-foreground">Click any word for its meaning</p>
+          <div className="grid lg:grid-cols-[1fr_20rem] gap-4 sm:gap-6 items-start">
+            <div className="card-paper p-4 sm:p-6 md:p-8">
+              <div className="flex items-center justify-between mb-4 sm:mb-5 gap-2">
+                <p className="text-xs sm:text-sm text-muted-foreground">Tap any word for its meaning</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -258,9 +258,9 @@ const Interactive = () => {
                   New page
                 </Button>
               </div>
-              <div className="space-y-4 font-body text-lg leading-loose text-foreground">
+              <div className="space-y-4 sm:space-y-6 font-body text-base sm:text-lg leading-loose sm:leading-loose text-foreground max-w-2xl">
                 {paragraphs.map((paragraph, pi) => (
-                  <p key={pi}>
+                  <p key={pi} className="text-justify sm:text-left">
                     {splitParagraph(paragraph).map((token, ti) => {
                       const match = token.match(WORD_RE);
                       if (!match) return <span key={ti}>{token}</span>;
@@ -274,7 +274,7 @@ const Interactive = () => {
                             handleWordClick(clean, sentenceAround(paragraph, paragraph.indexOf(token)))
                           }
                           className={cn(
-                            'rounded px-0.5 transition-colors hover:bg-primary/15 hover:text-primary',
+                            'inline-block rounded px-0.5 py-0.5 min-h-[1.75em] align-baseline transition-colors hover:bg-primary/15 hover:text-primary',
                             isActive && 'bg-primary/20 text-primary font-semibold',
                             inDeck(clean) && 'underline decoration-accent decoration-2 underline-offset-4',
                           )}
@@ -288,8 +288,8 @@ const Interactive = () => {
               </div>
             </div>
 
-            <aside className="lg:sticky lg:top-24 space-y-4">
-              <div className="card-paper p-5 min-h-[12rem]">
+            <aside className="lg:sticky lg:top-24 space-y-3 sm:space-y-4">
+              <div className="card-paper p-4 sm:p-5 min-h-[10rem] sm:min-h-[12rem]">
                 {isLookingUp ? (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" /> Looking up “{activeWord}”…
@@ -298,7 +298,7 @@ const Interactive = () => {
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h3 className="font-display text-2xl font-bold text-foreground">{lookup.word}</h3>
+                        <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground">{lookup.word}</h3>
                         {lookup.pronunciation && (
                           <p className="text-sm font-mono text-muted-foreground">{lookup.pronunciation}</p>
                         )}
@@ -310,6 +310,7 @@ const Interactive = () => {
                           onClick={handlePronounce}
                           disabled={playing}
                           aria-label="Play pronunciation"
+                          className="h-9 w-9"
                         >
                           {playing ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -325,6 +326,7 @@ const Interactive = () => {
                             setActiveWord(null);
                           }}
                           aria-label="Close"
+                          className="h-9 w-9"
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -343,7 +345,7 @@ const Interactive = () => {
                     )}
 
                     {getWordTranslation(lookup) && (
-                      <p dir={language.rtl ? 'rtl' : 'ltr'} className="text-xl text-primary">
+                      <p dir={language.rtl ? 'rtl' : 'ltr'} className="text-lg sm:text-xl text-primary">
                         {getWordTranslation(lookup)}
                       </p>
                     )}
@@ -378,13 +380,13 @@ const Interactive = () => {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Click a word in the page to see its definition, translation and examples here.
+                    Tap a word in the page to see its definition, translation and examples here.
                   </p>
                 )}
               </div>
 
-              <div className="card-paper p-5 space-y-3">
-                <div className="flex items-center justify-between">
+              <div className="card-paper p-4 sm:p-5 space-y-3">
+                <div className="flex items-center justify-between gap-2">
                   <h4 className="font-display font-semibold text-foreground">
                     My deck ({deck.length})
                   </h4>
@@ -405,7 +407,7 @@ const Interactive = () => {
                 {deck.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No saved words yet.</p>
                 ) : (
-                  <ul className="space-y-1.5 max-h-64 overflow-y-auto">
+                  <ul className="space-y-1.5 max-h-48 sm:max-h-64 overflow-y-auto">
                     {deck.map((w) => (
                       <li
                         key={w.word}
@@ -414,11 +416,11 @@ const Interactive = () => {
                         <span className="truncate">{w.word}</span>
                         <button
                           type="button"
-                          className="text-muted-foreground hover:text-destructive"
+                          className="text-muted-foreground hover:text-destructive p-1 -mr-1"
                           onClick={() => setDeck(removeFromDeck(w.word))}
                           aria-label={`Remove ${w.word}`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                         </button>
                       </li>
                     ))}
@@ -439,6 +441,5 @@ const Interactive = () => {
       )}
     </div>
   );
-};
 
 export default Interactive;
