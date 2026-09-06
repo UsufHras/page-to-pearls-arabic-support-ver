@@ -127,6 +127,54 @@ export type Database = {
         }
         Relationships: []
       }
+      lookup_history: {
+        Row: {
+          context_sentence: string | null
+          created_at: string
+          definition: string
+          difficulty: string | null
+          examples: string[]
+          id: string
+          language_code: string | null
+          lookups: number
+          pronunciation: string | null
+          translation: string | null
+          updated_at: string
+          user_id: string
+          word: string
+        }
+        Insert: {
+          context_sentence?: string | null
+          created_at?: string
+          definition?: string
+          difficulty?: string | null
+          examples?: string[]
+          id?: string
+          language_code?: string | null
+          lookups?: number
+          pronunciation?: string | null
+          translation?: string | null
+          updated_at?: string
+          user_id: string
+          word: string
+        }
+        Update: {
+          context_sentence?: string | null
+          created_at?: string
+          definition?: string
+          difficulty?: string | null
+          examples?: string[]
+          id?: string
+          language_code?: string | null
+          lookups?: number
+          pronunciation?: string | null
+          translation?: string | null
+          updated_at?: string
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
