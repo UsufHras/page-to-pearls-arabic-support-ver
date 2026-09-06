@@ -441,5 +441,6 @@ const Interactive = () => {
       )}
     </div>
   );
+};
 
 export default Interactive;
